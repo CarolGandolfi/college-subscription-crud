@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 struct aluno {
   int codigo;
@@ -15,53 +16,98 @@ struct disciplina {
   int creditos;
 };
 
-void consultaAluno(){
-    FILE* fp = fopen("../students.csv", "r");
+char* existeDisciplina(char nome[50]){
+  FILE* fp = fopen("../disciplinas.csv", "r");
+  if (!fp){
+    printf("Can't open file\n");
+  }else{
+    char buffer[1024];
+    char lowerNome[50];
+    strcpy(lowerNome, nome);
+
+    for(unsigned int i=0; i< strlen(lowerNome); i++){
+      lowerNome[i] = tolower(lowerNome[i]);
+    } 
+    // printf("a materia %s existe?\n", lowerNome);
+    int row = 0;
+    // int column = 0;
  
-    if (!fp)
-        printf("Can't open file\n");
-    else {
-        // Here we have taken size of array 1024 you can modify it
-        char buffer[1024];
+    while (fgets(buffer, 1024, fp)) {
+      // column = 0;
+      row++;
+      // Splitting the data
+      char* value = strtok(buffer, ",");
  
-        int row = 0;
-        int column = 0;
- 
-        while (fgets(buffer, 1024, fp)) {
-            column = 0;
-            row++;
- 
-            // Splitting the data
-            char* value = strtok(buffer, ",");
- 
-            while (value) {
-                // Column 1
-                if (column == 0) {
-                    printf("Nome: ");
-                }
- 
-                // Column 2
-                if (column == 1) {
-                    printf("\tCodigo: ");
-                }
- 
-                // Column 3
-                if (column == 2) {
-                    printf("\tCPF: ");
-                }
- 
-                printf("%s", value);
-                value = strtok(NULL, ", ");
-                column++;
-            }
- 
-            printf("\n");
-        }
- 
-        // Close the file
+      if(strcmp(lowerNome, value)==0){
+        //printf ("existe e o codigo eh %s\n", value);
+        // column = 1;
         fclose(fp);
+        return value;
+      }
     }
-    return;
+    //printf("Nao existe\n");
+    // Close the file
+    fclose(fp);
+  }
+  return "\0";
+
+}
+
+void consultaAluno(char nome[100]){
+  FILE* fp = fopen("../students.csv", "r");
+
+  if (!fp){
+    printf("Can't open file\n");
+  }else{
+    char buffer[1024];
+    char lowerNome[50];
+    strcpy(lowerNome, nome);
+    for(unsigned int i=0; i< strlen(lowerNome); i++){
+      lowerNome[i] = tolower(lowerNome[i]);
+    } 
+
+    int row = 0;
+    int column = 0;
+ 
+    while (fgets(buffer, 1024, fp)) {
+      column = 0;
+      row++;
+      // Splitting the data
+      char* value = strtok(buffer, ",{}-");
+ 
+      if(strcmp(lowerNome, value)==0){
+        while (strcmp(value,"\n")) {
+          // Column 1
+          if (column == 0) {
+            value[0]=toupper(value[0]);
+            printf("Nome: %s", value);
+          }
+ 
+          // Column 2
+          if (column == 1) {
+            printf("\tCodigo:%s", value);
+          }
+ 
+          // Column 3
+          if (column == 2) {
+            printf("\tCPF:%s\n", value);
+          }
+
+          if (column>2){
+            printf("%s\n", value);
+          }
+          value = strtok(NULL, ",{}-");
+          column++;
+        } 
+        fclose(fp);
+        return;
+      }else{
+        printf("Aluno nao cadastrado.\n");
+      }
+    }
+    fclose(fp);
+  }
+  return;
 }
 
 void cadastroAluno(){
@@ -76,6 +122,9 @@ void cadastroAluno(){
   printf("Digite o nome do aluno: ");
   fgets(a->nome,sizeof(a->nome),stdin);
   a->nome[strcspn(a->nome, "\n")] = '\0'; // substitui \n por \0
+  for(unsigned int i=0; i<strlen(a->nome); i++){
+    a->nome[i] = tolower(a->nome[i]);
+  }
 
   printf("Digite o codigo do aluno: ");
   scanf("%d", &a->codigo);
@@ -85,24 +134,53 @@ void cadastroAluno(){
   fgets(a->cpf,sizeof(a->cpf),stdin);
   a->cpf[strcspn(a->cpf, "\n")] = '\0'; // substitui \n por \0
 
-  printf("Deseja adicionar disciplina?\n1. Sim\n2. Nao\n ");
-  int op;
-  scanf("%d", &op);
-  switch (op){
-  case 1:
-    /* code */
-    break;
-  case 2:
-    /* code */
-    break;
-  
-  default:
-    printf("Opção Inválida\n");
-    break;
-  }
+  fprintf(fp, "%s, %d, %s", a->nome, a->codigo, a->cpf);
+
+  int op=0;
+  do{
+    printf("Deseja adicionar disciplinas a um período?\n1. Sim\n2. Nao\n");
+    char per[10], str[50], disciplina[50];
+    scanf("%d", &op);
+    fflush(stdin);
+    if (op==1){
+      printf("Qual período a matéria foi/será cursada? (formato AAAA.S)\n");
+      fgets(per,sizeof(per),stdin);
+      per[strcspn(per, "\n")] = '\0';
+      fprintf(fp, ", %s{", per);
+      int oc=0;
+      //materias do periodo
+      do{
+        printf("Qual a disciplina cursada?(digite 0 para sair)\n");
+        fgets(str,sizeof(str),stdin);
+        str[strcspn(str, "\n")] = '\0';
+        //
+        if(strcmp(str,"0")==0){
+          break;
+        }
+        strcpy(disciplina, existeDisciplina(str));
+
+        if(strlen(disciplina)==0){
+          printf("Essa disciplina nao esta cadastrada.\n");
+        }else{
+          printf("Disciplina adicionada ao periodo.\n");
+          if(oc==0){
+            oc++;
+            fprintf(fp, "%s", disciplina);
+          }else{
+            fprintf(fp, "-%s", disciplina);
+          }
+        }
+      } while (1);
+      fprintf(fp, "}");
+
+    } else if (op!=1 && op!=2){
+      printf("Opcao invalida");
+    }
+
+  } while (op!=2);
 
   // Saving data in file
-  fprintf(fp, "%s, %d, %s\n", a->nome, a->codigo, a->cpf);
+  fprintf(fp, "\n");
  
   printf("\nNovo aluno adicionado ao sistema.\n");
  
@@ -123,6 +201,9 @@ void cadastroDisciplina(){
   printf("Digite o nome da disciplina: ");
   fgets(d->nome,sizeof(d->nome),stdin);
   d->nome[strcspn(d->nome, "\n")] = '\0'; // substitui \n por \0
+  for(unsigned int i=0; i<strlen(d->nome); i++){
+    d->nome[i] = tolower(d->nome[i]);
+  }
 
   printf("Digite o codigo da disciplina: ");
   scanf("%d", &d->codigo);
@@ -169,12 +250,17 @@ int main(){
 
       case 3:
         printf("Consulta por aluno.\n");
-        consultaAluno();
+        printf("Digite o nome completo a ser consultado: ");
+        char name[50];
+        fgets(name,sizeof(name),stdin);
+        name[strcspn(name, "\n")] = '\0'; // substitui \n por \0
+        consultaAluno(name);
         printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Consulta por Aluno\n4. Consulta por Disciplina\n5. Sair\n");
         //consulta por aluno
       break;
       case 4:
         printf("consulta por disciplina.\n");
+        printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Consulta por Aluno\n4. Consulta por Disciplina\n5. Sair\n");
         //consulta por disciplina
       break;
       case 5:
