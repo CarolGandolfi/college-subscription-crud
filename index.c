@@ -68,6 +68,7 @@ void consultaAluno(char nome[100]){
 
     int row = 0;
     int column = 0;
+    int cont = 0;
  
     while (fgets(buffer, 1024, fp)) {
       column = 0;
@@ -99,12 +100,15 @@ void consultaAluno(char nome[100]){
           value = strtok(NULL, ",{}-");
           column++;
         } 
+        cont++;
         fclose(fp);
         return;
-      }else{
-        printf("Aluno nao cadastrado.\n");
       }
     }
+    if (cont==0){
+      printf("Aluno nao cadastrado.\n");
+    }
+
     fclose(fp);
   }
   return;
