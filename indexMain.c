@@ -21,7 +21,7 @@ typedef struct {
   char codigo[6];
   char nome[50];
   char professor[100];
-  int creditos;
+  char creditos[5];
   struct disciplina* prox;
 } disciplina;
 
@@ -36,13 +36,13 @@ void insereAluno (char cod[7], char cpf[15], char nome[100], aluno *p){
   p->prox = (struct aluno*)nova;
 }
 
-void insereDisciplina (char cod[6], char nome[50], char prof[100], int cred, disciplina *p){
+void insereDisciplina (char cod[6], char nome[50], char prof[100], char cred[5], disciplina *p){
   disciplina *nova;
   nova = malloc (sizeof (disciplina));
   strcpy(nova->codigo, cod);
   strcpy(nova->nome, nome);
   strcpy(nova->professor, prof);
-  nova->creditos = cred;
+  strcpy(nova->creditos, cred);
   nova->prox = p->prox;
   p->prox = (struct disciplina*)nova;
 }
@@ -84,7 +84,7 @@ void imprimeA (aluno *le) {
 void imprimeD (disciplina *le) {
    disciplina *p;
    for (p = (disciplina *)le->prox; p != NULL; p = (disciplina *)p->prox)
-      printf ("Disciplina: %s\tCodigo: %s\tProfessor: %s\t Creditos: %d\n", p->nome, p->codigo, p->professor, p->creditos);
+      printf ("Disciplina: %s\tCodigo: %s\tProfessor: %s\t Creditos: %s\n", p->nome, p->codigo, p->professor, p->creditos);
 }
 
 void imprimeP (periodo *le) {
@@ -93,10 +93,32 @@ void imprimeP (periodo *le) {
       printf ("Periodo: %s\tCodigoDis: %s\tCodigoAl: %s\n", p->periodo, p->codDis, p->codAl);
 }
 
-void removeAluno(aluno** head_ref, char str[100]) {
-  aluno* temp = *head_ref, *prev;
+void removePer(periodo* head_ref, char str[10]){
+  periodo* temp = head_ref, *prev = NULL;
+  while(temp != NULL){
+    if (strcmp(temp->codAl, str) == 0 || strcmp(temp->codDis, str) == 0 || strcmp(temp->periodo, str) == 0) {
+      if (prev == NULL) {
+        head_ref = (periodo *)temp->prox;
+      } else {
+        prev->prox = temp->prox;
+      }
+      printf("Periodo %s com codAl %s e codDis %s apagado\n", temp->periodo, temp->codAl, temp->codDis);
+      free(temp);
+      removePer(head_ref, str);
+      temp = head_ref;
+    } else {
+      prev = temp;
+      temp = (periodo *)temp->prox;
+    }
+  }
+  return;
+}
+
+void removeAluno(aluno* head_ref, char str[100], periodo* lp) {
+  aluno* temp = head_ref, *prev;
    if (temp != NULL && (strcmp(temp->codigo, str)==0 || strcmp(temp->nome, str)==0)) {
-      *head_ref = (aluno *)temp->prox;
+      head_ref = (aluno *)temp->prox;
+      removePer(lp, temp->codigo);
       free(temp);
       printf("Aluno excluido com sucesso.\n");
       return;
@@ -111,15 +133,17 @@ void removeAluno(aluno** head_ref, char str[100]) {
       return;
    }
   prev->prox = temp->prox;
+  removePer(lp, temp->codigo);
   free(temp);
   printf("Aluno excluido com sucesso.\n");
   return;
 }
 
-void removeDisc(disciplina** head_ref, char str[100]) {
-  disciplina* temp = *head_ref, *prev;
+void removeDisc(disciplina* head_ref, char str[100], periodo* lp) {
+  disciplina* temp = head_ref, *prev;
    if (temp != NULL && (strcmp(temp->codigo, str)==0 || strcmp(temp->nome, str)==0 || strcmp(temp->professor, str)==0)) {
-      *head_ref = (disciplina *)temp->prox;
+      head_ref = (disciplina *)temp->prox;
+      removePer(lp, temp->codigo);
       free(temp);
       return;
    }
@@ -134,111 +158,30 @@ void removeDisc(disciplina** head_ref, char str[100]) {
    }
 
   prev->prox = temp->prox;
+  removePer(lp, temp->codigo);
   free(temp);
   printf("Disciplina excluida com sucesso.\n");
   return;
 }
 
-void removePer(periodo** head_ref, char str[10]){
-  periodo* temp = *head_ref, *prev;
-  if (temp != NULL && (strcmp(temp->codAl, str)==0 || strcmp(temp->codDis, str)==0 || strcmp(temp->periodo, str)==0)) {
-      *head_ref = (periodo *)temp->prox;
-      free(temp);
-      return;
-   }
-
-   while (temp != NULL && (strcmp(temp->codAl, str)!=0 && strcmp(temp->codDis, str)!=0 && strcmp(temp->periodo, str)!=0)) {
-      prev = temp;
-      temp = (periodo *)temp->prox;
-   }
-
-   if (temp == NULL) {
-      return;
-   }
-
-  prev->prox = temp->prox;
-  free(temp);
-  return;
-}
-
-void consultaAluno(char nome[100]){
-  FILE* fp = fopen("../students.csv", "r");
-
-  if (!fp){
-    printf("Can't open file\n");
-  }else{
-    char buffer[1024];
-    char lowerNome[50];
-    strcpy(lowerNome, nome);
-    for(unsigned int i=0; i< strlen(lowerNome); i++){
-      lowerNome[i] = tolower(lowerNome[i]);
-    } 
-
-    int row = 0;
-    int column = 0;
-    int cont = 0;
- 
-    while (fgets(buffer, 1024, fp)) {
-      column = 0;
-      row++;
-      // Splitting the data
-      char* value = strtok(buffer, ",{}-");
- 
-      if(strcmp(lowerNome, value)==0){
-        while (strcmp(value,"\n")) {
-          // Column 1
-          if (column == 0) {
-            value[0]=toupper(value[0]);
-            printf("Nome: %s", value);
-          }
- 
-          // Column 2
-          if (column == 1) {
-            printf("\tCodigo: %s", value);
-          }
- 
-          // Column 3
-          if (column == 2) {
-            printf("\tCPF:%s\n", value);
-          }
-
-          if (column>2){
-            printf("%s\n", value);
-          }
-          value = strtok(NULL, ",{}-");
-          column++;
-        } 
-        cont++;
-        fclose(fp);
-        return;
-      }
-    }
-    if (cont==0){
-      printf("Aluno nao cadastrado.\n");
-    }
-
-    fclose(fp);
-  }
-  return;
-}
-
 void cadastroAluno(aluno* a){
+  char nome[100], cpf[15], codigo[7];
   printf("Digite o nome do aluno: ");
-  fgets(a->nome,sizeof(a->nome),stdin);
-  a->nome[strcspn(a->nome, "\n")] = '\0'; // substitui \n por \0
-  for(unsigned int i=0; i<strlen(a->nome); i++){
-    a->nome[i] = tolower(a->nome[i]);
+  fgets(nome,sizeof(nome),stdin);
+  nome[strcspn(nome, "\n")] = '\0'; // substitui \n por \0
+  for(unsigned int i=0; i<strlen(nome); i++){
+    nome[i] = tolower(nome[i]);
   }
 
   printf("Digite o codigo do aluno: ");
-  fgets(a->codigo,sizeof(a->codigo),stdin);
-  a->codigo[strcspn(a->codigo, "\n")] = '\0';
+  fgets(codigo,sizeof(codigo),stdin);
+  codigo[strcspn(codigo, "\n")] = '\0';
 
   printf("Digite o CPF do aluno: ");
-  fgets(a->cpf,sizeof(a->cpf),stdin);
-  a->cpf[strcspn(a->cpf, "\n")] = '\0'; // substitui \n por \0
+  fgets(cpf,sizeof(cpf),stdin);
+  cpf[strcspn(cpf, "\n")] = '\0'; // substitui \n por \0
 
-  insereAluno(a->codigo, a->cpf, a->nome, a);
+  insereAluno(codigo, cpf, nome, a);
  
   printf("\nNovo aluno adicionado ao sistema.\n");
 
@@ -246,26 +189,27 @@ void cadastroAluno(aluno* a){
 }
 
 void cadastroDisciplina(disciplina* ld){
+  char nome[50], professor[100], codigo[6], creditos[5];
   printf("Digite o nome da disciplina: ");
-  fgets(ld->nome,sizeof(ld->nome),stdin);
-  ld->nome[strcspn(ld->nome, "\n")] = '\0'; // substitui \n por \0
-  for(unsigned int i=0; i<strlen(ld->nome); i++){
-    ld->nome[i] = tolower(ld->nome[i]);
+  fgets(nome,sizeof(nome),stdin);
+  nome[strcspn(nome, "\n")] = '\0'; // substitui \n por \0
+  for(unsigned int i=0; i<strlen(nome); i++){
+    nome[i] = tolower(nome[i]);
   }
 
   printf("Digite o codigo da disciplina: ");
-  fgets(ld->codigo,sizeof(ld->codigo),stdin);
-  ld->codigo[strcspn(ld->codigo, "\n")] = '\0';
+  fgets(codigo,sizeof(codigo),stdin);
+  codigo[strcspn(codigo, "\n")] = '\0';
 
   printf("Digite o nome do professor: ");
-  fgets(ld->professor,sizeof(ld->professor),stdin);
-  ld->professor[strcspn(ld->professor, "\n")] = '\0'; // substitui \n por \0
+  fgets(professor,sizeof(professor),stdin);
+  professor[strcspn(professor, "\n")] = '\0'; // substitui \n por \0
 
   printf("Digite o numero de creditos da disciplina: ");
-  scanf("%d", &ld->creditos);
-  fflush(stdin);
+  fgets(creditos,sizeof(creditos),stdin);
+  creditos[strcspn(creditos, "\n")] = '\0';
 
-  insereDisciplina(ld->codigo, ld->nome, ld->professor, ld->creditos, ld);
+  insereDisciplina(codigo, nome, professor, creditos, ld);
 
   printf("\nNova disciplina adicionada ao sistema.\n");
 
@@ -318,8 +262,243 @@ void matricula(disciplina* ld, aluno* la, periodo* lp){
   return;
 }
 
-void pullStudents(){
-  
+void pullStudents(aluno* a){
+  char nome[100], codigo[7], cpf[15];
+  FILE* fp = fopen("../students.csv", "r");
+
+  if (!fp){
+    printf("Can't open file\n");
+  }else{
+    char buffer[1024];
+    int row = 0;
+    int column = 0;
+ 
+    while (fgets(buffer, 1024, fp)) {
+      column = 0;
+      row++;
+      // Splitting the data
+      char* value = strtok(buffer, ",");
+ 
+      while (value) {
+        // Column 1
+        if (column == 0) {
+          strcpy(nome, value);
+        }
+
+        // Column 2
+        if (column == 1) {
+          strcpy(codigo, value);
+        }
+
+        // Column 3
+        if (column == 2) {
+          value[strcspn(value, "\n")] = '\0'; // substitui \n por \0
+          strcpy(cpf, value);
+        }
+
+        value = strtok(NULL, ",");
+        column++;
+      }
+      insereAluno(codigo, cpf, nome, a);
+    }
+    fclose(fp); 
+  }
+  return;
+}
+
+void pullSubject(disciplina* d){
+  char nome[50], codigo[6], professor[100], creditos[5];
+  FILE* fp = fopen("../disciplinas.csv", "r");
+
+  if (!fp){
+    printf("Can't open file\n");
+  }else{
+    char buffer[1024];
+    int row = 0;
+    int column = 0;
+ 
+    while (fgets(buffer, 1024, fp)) {
+      column = 0;
+      row++;
+      // Splitting the data
+      char* value = strtok(buffer, ",");
+ 
+      while (value) {
+        // Column 1
+        if (column == 0) {
+          strcpy(nome, value);
+        }
+
+        // Column 2
+        if (column == 1) {
+          strcpy(codigo, value);
+        }
+
+        // Column 3
+        if (column == 2) {
+          strcpy(professor, value);
+        }
+
+        if (column == 3) {
+          value[strcspn(value, "\n")] = '\0'; // substitui \n por \0
+          strcpy(creditos, value);
+        }
+
+        value = strtok(NULL, ",");
+        column++;
+      }
+      insereDisciplina(codigo, nome, professor, creditos, d);
+
+    }
+    fclose(fp); 
+  }
+  return;
+}
+
+void pullTerm(periodo* p){
+  char per[9], codAl[7], codDis[6];  
+  FILE* fp = fopen("../periodos.csv", "r");
+
+  if (!fp){
+    printf("Can't open file\n");
+  }else{
+    char buffer[1024];
+    int row = 0;
+    int column = 0;
+ 
+    while (fgets(buffer, 1024, fp)) {
+      column = 0;
+      row++;
+      // Splitting the data
+      char* value = strtok(buffer, ",");
+ 
+      while (value) {
+        // Column 1
+        if (column == 0) {
+          strcpy(per, value);
+        }
+
+        // Column 2
+        if (column == 1) {
+          strcpy(codAl, value);
+        }
+
+        // Column 3
+        if (column == 2) {
+          value[strcspn(value, "\n")] = '\0'; // substitui \n por \0
+          strcpy(codDis, value);
+        }
+
+        value = strtok(NULL, ",");
+        column++;
+      }
+      inserePeriodo(codAl, codDis, per, p);
+    }
+    fclose(fp); 
+  }
+  return;
+}
+
+void consultaAl(aluno* la, periodo* lp, disciplina* ld) {
+  //recebe info do aluno e diz quais as marérias em quais períodos ele cursa/cursou
+  aluno* al;
+  disciplina* d;
+  periodo* per = lp;
+  int cont = 0;
+  printf("Qual aluno será consultado?\n");
+  imprimeA(la);
+  char str[100];
+  fgets(str,sizeof(str),stdin);
+  str[strcspn(str, "\n")] = '\0'; 
+  al = buscaAl(str, la);
+  if(al ==  NULL){
+    printf("Aluno não cadastrado.\n");
+    return;
+  }
+  while(per != NULL){
+    per = buscaPer(al->codigo, per);
+    if (per != NULL){
+      d = buscaDis(per->codDis, ld);
+      if(d != NULL){
+        cont++;
+        printf("Cursou %s no periodo %s\n", d->nome, per->periodo);
+      }
+      per = (periodo *)per->prox;
+    }
+  }
+  if(cont==0){
+    printf("Aluno não matriculado em nenhuma disciplina\n");
+  }
+  return;
+}
+
+void consultaDis(aluno* la, periodo* lp, disciplina* ld){
+  //recebe info da disc e diz quais os alunos em quais períodos foram matriculados
+  aluno* al;
+  disciplina* d;
+  periodo* per = lp;
+  int cont = 0;
+  printf("Qual disciplina será consultada?\n");
+  imprimeD(ld);
+  char str[100];
+  fgets(str,sizeof(str),stdin);
+  str[strcspn(str, "\n")] = '\0'; 
+  d = buscaDis(str, ld);
+  if(d ==  NULL){
+    printf("Disciplina não cadastrada.\n");
+    return;
+  }
+  while(per != NULL){
+    per = buscaPer(d->codigo, per);
+    if (per != NULL){
+      al = buscaAl(per->codAl, la);
+      if(al != NULL){
+        cont++;
+        printf("Aluno(a) %s matriculado(a) no periodo %s\n", al->nome, per->periodo);
+      }
+      per = (periodo *)per->prox;
+    }
+  }
+  if(cont==0){
+    printf("Nenhum aluno matriculado nessa disciplina\n");
+  }
+  return;
+}
+
+void pushStudents(aluno* la){
+  FILE* fp = fopen("../students.csv", "w+");
+  if (!fp) {
+    printf("Can't open file\n");
+    return;
+  }
+  aluno *p;
+  for (p = (aluno *)la->prox; p != NULL; p = (aluno *)p->prox){
+    fprintf(fp, "%s,%s,%s\n", p->nome, p->codigo, p->cpf);
+  }
+}
+
+void pushSubject(disciplina* ld){
+  FILE* fp = fopen("../disciplinas.csv", "w+");
+  if (!fp) {
+    printf("Can't open file\n");
+    return;
+  }
+  disciplina *p;
+  for (p = (disciplina *)ld->prox; p != NULL; p = (disciplina *)p->prox){
+    fprintf(fp, "%s,%s,%s,%s\n", p->nome, p->codigo, p->professor, p->creditos);
+  }
+}
+
+void pushTerm(periodo* lp){
+  FILE* fp = fopen("../periodos.csv", "w+");
+  if (!fp) {
+    printf("Can't open file\n");
+    return;
+  }
+  periodo *p;
+  for (p = (periodo *)lp->prox; p != NULL; p = (periodo *)p->prox){
+    fprintf(fp, "%s,%s,%s\n", p->periodo, p->codAl, p->codDis);
+  }
 }
 
 int main(){
@@ -336,6 +515,10 @@ int main(){
   periodo *listaPer;
   listaPer = (periodo*)malloc(sizeof(periodo));
   listaPer->prox = NULL;
+
+  pullStudents(listaAl);
+  pullSubject(listaDis);
+  pullTerm(listaPer);
 
   printf("MENU\n");
   printf("1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Consulta por Aluno\n4. Consulta por Disciplina\n5. Matricular aluno em disciplina\n6. Exibir lista de periodos\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Deletar um periodo do sistema\n0. Sair\n");
@@ -358,18 +541,13 @@ int main(){
 
       case 3:
         printf("Consulta por aluno.\n");
-        imprimeA(listaAl);
-        // printf("Digite o nome completo a ser consultado: ");
-        // char name[100];
-        // fgets(name,sizeof(name),stdin);
-        // name[strcspn(name, "\n")] = '\0'; // substitui \n por \0
-        // consultaAluno(name);
+        consultaAl(listaAl, listaPer, listaDis);
         printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Consulta por Aluno\n4. Consulta por Disciplina\n5. Matricular aluno em disciplina\n6. Exibir lista de periodos\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Deletar um periodo do sistema\n0. Sair\n");
         //consulta por aluno
       break;
       case 4:
         printf("consulta por disciplina.\n");
-        imprimeD(listaDis);
+        consultaDis(listaAl, listaPer, listaDis);
         printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Consulta por Aluno\n4. Consulta por Disciplina\n5. Matricular aluno em disciplina\n6. Exibir lista de periodos\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Deletar um periodo do sistema\n0. Sair\n");
         //consulta por disciplina
       break;
@@ -393,12 +571,10 @@ int main(){
           str[i] = tolower(str[i]);
         }
         aluno* codeAl = buscaAl(str, listaAl);
-        removeAluno(&listaAl, str);
-        //ver se funciona
-        while(listaPer){
-          removePer(&listaPer, codeAl->codigo);
-          listaPer=(periodo *)buscaPer(codeAl->codigo, listaPer)->prox;
+        if(codeAl != NULL) {
+          removeAluno(listaAl, str, listaPer);
         }
+        
         printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Consulta por Aluno\n4. Consulta por Disciplina\n5. Matricular aluno em disciplina\n6. Exibir lista de periodos\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Deletar um periodo do sistema\n0. Sair\n");
       break;
       case 8:
@@ -411,9 +587,9 @@ int main(){
           str[i] = tolower(str[i]);
         }
         disciplina* codeDis = buscaDis(str, listaDis);
-        removeDisc(&listaDis, str);
-        //ver se funciona
-        removePer(&listaPer, codeDis->codigo);
+        if(codeDis != NULL) {
+          removeDisc(listaDis, str, listaPer);
+        }
         printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Consulta por Aluno\n4. Consulta por Disciplina\n5. Matricular aluno em disciplina\n6. Exibir lista de periodos\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Deletar um periodo do sistema\n0. Sair\n");
       break;
       case 9:
@@ -425,13 +601,15 @@ int main(){
         for(unsigned int i=0; i<strlen(str); i++){
           str[i] = tolower(str[i]);
         }
-        //corrigir aqui tbm
-        removePer(&listaPer, str);
+        removePer(listaPer, str);
         printf("Periodo removido.\n");
         printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Consulta por Aluno\n4. Consulta por Disciplina\n5. Matricular aluno em disciplina\n6. Exibir lista de periodos\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Deletar um periodo do sistema\n0. Sair\n");
       break;
       case 0:
-        printf("Tchau\n");
+        pushStudents(listaAl);
+        pushSubject(listaDis);
+        pushTerm(listaPer);
+        printf("Seção encerrada\n");
         return 0;
       default:
         printf("Opção inválida! Tente novamente.\n");
