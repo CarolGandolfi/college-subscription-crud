@@ -537,6 +537,40 @@ void pushTerm(periodo* lp){
   }
 }
 
+void freeAl(aluno* la){
+  aluno* atual, *proxNode;
+  if(la->prox != NULL){
+    atual = (aluno*)la->prox;
+    while(atual != NULL){
+      proxNode = (aluno*)atual->prox;
+      free(atual);
+      atual = proxNode;
+    }
+  }
+}
+void freeDis(disciplina* ld){
+  disciplina* atual, *proxNode;
+  if(ld->prox != NULL){
+    atual = (disciplina*)ld->prox;
+    while(atual != NULL){
+      proxNode = (disciplina*)atual->prox;
+      free(atual);
+      atual = proxNode;
+    }
+  }
+}
+void freePer(periodo* lp){
+  periodo* atual, *proxNode;
+  if(lp->prox != NULL){
+    atual = (periodo*)lp->prox;
+    while(atual != NULL){
+      proxNode = (periodo*)atual->prox;
+      free(atual);
+      atual = proxNode;
+    }
+  }
+}
+
 int main(){
   int menu;
   char str[100];
@@ -697,6 +731,9 @@ int main(){
         pushStudents(listaAl);
         pushSubject(listaDis);
         pushTerm(listaPer);
+        freeAl(listaAl);
+        freeDis(listaDis);
+        freePer(listaPer);
         printf("Secao encerrada\n");
         return 0;
       default:
