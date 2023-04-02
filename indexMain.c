@@ -415,7 +415,7 @@ void consultaAl(aluno* la, periodo* lp, disciplina* ld) {
     printf("Nenhum aluno cadastrado\n");
     return;
   }
-  printf("Qual aluno será consultado?\n");
+  printf("Qual aluno sera consultado?\n");
   imprimeA(la);
   char str[100];
   fgets(str,sizeof(str),stdin);
@@ -425,20 +425,32 @@ void consultaAl(aluno* la, periodo* lp, disciplina* ld) {
     printf("Aluno não cadastrado.\n");
     return;
   }
+  char term[9];
+  printf("Qual periodo?\n");
+  fgets(term,sizeof(term),stdin);
+  term[strcspn(term, "\n")] = '\0'; 
+
   while(per != NULL){
     per = buscaPer(al->codigo, per);
     if (per != NULL){
       d = buscaDis(per->codDis, ld);
       if(d != NULL){
-        cont++;
-        printf("Cursou %s no periodo %s\n", d->nome, per->periodo);
+        if(strcmp(per->periodo,term)==0){
+          cont++;
+          printf("%s\n", d->nome);
+        }
+        else{
+          cont++;
+          printf("Nao ha disciplinas cadastradas para o aluno no periodo especificado.\n");
+        }
       }
       per = (periodo *)per->prox;
     }
+    if(cont==0){
+    printf("Nenhum aluno matriculado nessa disciplina\n");
   }
-  if(cont==0){
-    printf("Aluno não matriculado em nenhuma disciplina\n");
   }
+
   return;
 }
 
@@ -462,13 +474,23 @@ void consultaDis(aluno* la, periodo* lp, disciplina* ld){
     printf("Disciplina não cadastrada.\n");
     return;
   }
+  char term[9];
+  printf("Qual periodo?\n");
+  fgets(term,sizeof(term),stdin);
+  term[strcspn(term, "\n")] = '\0'; 
   while(per != NULL){
     per = buscaPer(d->codigo, per);
     if (per != NULL){
       al = buscaAl(per->codAl, la);
       if(al != NULL){
-        cont++;
-        printf("Aluno(a) %s matriculado(a) no periodo %s\n", al->nome, per->periodo);
+        if(strcmp(per->periodo,term)==0){
+          cont++;
+          printf("%s\n", al->nome);
+        }
+        else{
+          cont++;
+          printf("Nao ha disciplinas cadastradas para o aluno no periodo especificado.\n");
+        }
       }
       per = (periodo *)per->prox;
     }
@@ -535,7 +557,7 @@ int main(){
   pullTerm(listaPer);
 
   printf("MENU\n");
-  printf("1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Matricular aluno em disciplina\n4. Consulta por Aluno\n5. Consulta por Disciplina\n6. Exibir lista de periodos\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Excluir um periodo do sistema\n0. Sair\n");
+  printf("1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Matricular aluno em disciplina\n4. Consulta por Aluno\n5. Consulta por Disciplina\n6. Exibir listas\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Excluir um periodo do sistema\n0. Salvar e encerrar.\n");
   while(1){  
     scanf("%d", &menu);
     fflush(stdin);
@@ -543,36 +565,73 @@ int main(){
       case 1:
         printf("Cadastro aluno.\n");
         cadastroAluno(listaAl);
-        printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Matricular aluno em disciplina\n4. Consulta por Aluno\n5. Consulta por Disciplina\n6. Exibir lista de periodos\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Excluir um periodo do sistema\n0. Sair\n");
-
+        printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Matricular aluno em disciplina\n4. Consulta por Aluno\n5. Consulta por Disciplina\n6. Exibir listas\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Excluir um periodo do sistema\n0. Salvar e encerrar.\n");
+        
       break;
       case 2:
         printf("Cadastro da disciplina\n");
         cadastroDisciplina(listaDis);
-        printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Matricular aluno em disciplina\n4. Consulta por Aluno\n5. Consulta por Disciplina\n6. Exibir lista de periodos\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Excluir um periodo do sistema\n0. Sair\n");
+        printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Matricular aluno em disciplina\n4. Consulta por Aluno\n5. Consulta por Disciplina\n6. Exibir listas\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Excluir um periodo do sistema\n0. Salvar e encerrar.\n");
         //cadastro da disciplina
       break;
       case 3:
         printf("Matricular aluno em disciplina.\n");
         matricula(listaDis, listaAl, listaPer);
-        printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Matricular aluno em disciplina\n4. Consulta por Aluno\n5. Consulta por Disciplina\n6. Exibir lista de periodos\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Excluir um periodo do sistema\n0. Sair\n");
-      break;  
+        printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Matricular aluno em disciplina\n4. Consulta por Aluno\n5. Consulta por Disciplina\n6. Exibir listas\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Excluir um periodo do sistema\n0. Salvar e encerrar.\n");
+      break;
       case 4:
         printf("Consulta por aluno.\n");
         consultaAl(listaAl, listaPer, listaDis);
-        printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Matricular aluno em disciplina\n4. Consulta por Aluno\n5. Consulta por Disciplina\n6. Exibir lista de periodos\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Excluir um periodo do sistema\n0. Sair\n");
+        printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Matricular aluno em disciplina\n4. Consulta por Aluno\n5. Consulta por Disciplina\n6. Exibir listas\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Excluir um periodo do sistema\n0. Salvar e encerrar.\n");
         //consulta por aluno
       break;
       case 5:
         printf("consulta por disciplina.\n");
         consultaDis(listaAl, listaPer, listaDis);
-        printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Matricular aluno em disciplina\n4. Consulta por Aluno\n5. Consulta por Disciplina\n6. Exibir lista de periodos\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Excluir um periodo do sistema\n0. Sair\n");
+        printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Matricular aluno em disciplina\n4. Consulta por Aluno\n5. Consulta por Disciplina\n6. Exibir listas\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Excluir um periodo do sistema\n0. Salvar e encerrar.\n");
         //consulta por disciplina
-      break;
+      break; 
       case 6:
-        printf("Exibir lista de periodos.\n");
-        imprimeP(listaPer);
-        printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Matricular aluno em disciplina\n4. Consulta por Aluno\n5. Consulta por Disciplina\n6. Exibir lista de periodos\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Excluir um periodo do sistema\n0. Sair\n");
+        printf("Exibir listas.\n");
+        int op;
+        printf("1. Alunos\n2. Disciplinas\n3. Periodos\n");
+        scanf("%d",&op);
+
+        switch (op)
+        {
+        case 1:
+          if(listaAl->prox != NULL){
+            imprimeA(listaAl);
+            printf("\n");
+          }
+          else{
+            printf("Lista vazia!\n");
+          }
+        break;
+        case 2:
+          if(listaDis->prox != NULL){
+            imprimeD(listaDis);
+            printf("\n");
+          }
+          else{
+            printf("Lista vazia!\n");
+          }
+        break;
+        case 3:
+          if(listaPer->prox != NULL){
+            imprimeP(listaPer);
+            printf("\n");
+          }
+          else{
+            printf("Lista vazia!\n");
+          }
+        break;
+        
+        default:
+          printf("Opcao invalida, tente novamente!");
+        break;
+        }
+        printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Matricular aluno em disciplina\n4. Consulta por Aluno\n5. Consulta por Disciplina\n6. Exibir listas\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Excluir um periodo do sistema\n0. Salvar e encerrar.\n");
       break;
       case 7:
         printf("Excluir aluno.\n");
@@ -589,9 +648,11 @@ int main(){
           aluno* codeAl = buscaAl(str, listaAl);
           if(codeAl != NULL) {
             removeAluno(listaAl, str, listaPer);
+          }else{
+            printf("Aluno sem cadastro!");
           }
         }
-        printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Matricular aluno em disciplina\n4. Consulta por Aluno\n5. Consulta por Disciplina\n6. Exibir lista de periodos\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Excluir um periodo do sistema\n0. Sair\n");
+        printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Matricular aluno em disciplina\n4. Consulta por Aluno\n5. Consulta por Disciplina\n6. Exibir listas\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Excluir um periodo do sistema\n0. Salvar e encerrar.\n");
       break;
       case 8:
         printf("Excluir disciplina.\n");
@@ -608,9 +669,11 @@ int main(){
           disciplina* codeDis = buscaDis(str, listaDis);
           if(codeDis != NULL) {
             removeDisc(listaDis, str, listaPer);
+          }else{
+            printf("Disciplina sem cadastro!");
           }
         }
-        printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Matricular aluno em disciplina\n4. Consulta por Aluno\n5. Consulta por Disciplina\n6. Exibir lista de periodos\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Excluir um periodo do sistema\n0. Sair\n");
+        printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Consulta por Aluno\n4. Consulta por Disciplina\n5. Matricular aluno em disciplina\n6. Exibir listas\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Excluir um periodo do sistema\n0. Salvar e encerrar.\n");
       break;
       case 9:
         printf("Excluir um periodo do sistema.\n");
@@ -622,17 +685,22 @@ int main(){
           str[i] = tolower(str[i]);
         }
         removePer(listaPer, str);
-        printf("Periodo removido.\n");
-        printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Matricular aluno em disciplina\n4. Consulta por Aluno\n5. Consulta por Disciplina\n6. Exibir lista de periodos\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Excluir um periodo do sistema\n0. Sair\n");
+        if(buscaPer(str,listaPer)!=NULL){
+          printf("Periodo removido.\n");
+        }
+        else{
+          printf("Nao ha alunos nem disciplinas cadastrados nesse periodo!");
+        }
+        printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Matricular aluno em disciplina\n4. Consulta por Aluno\n5. Consulta por Disciplina\n6. Exibir listas\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Excluir um periodo do sistema\n0. Salvar e encerrar.\n");
       break;
       case 0:
         pushStudents(listaAl);
         pushSubject(listaDis);
         pushTerm(listaPer);
-        printf("Seção encerrada\n");
+        printf("Secao encerrada\n");
         return 0;
       default:
-        printf("Opção inválida! Tente novamente.\n");
+        printf("Opcao invalida! Tente novamente.\n");
       break;
     }
   }
