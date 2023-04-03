@@ -277,7 +277,7 @@ void matricula(disciplina* ld, aluno* la, periodo* lp){
 
 void pullStudents(aluno* a){
   char nome[100], codigo[7], cpf[15];
-  FILE* fp = fopen("../students.csv", "r");
+  FILE* fp = fopen("./students.csv", "r");
 
   if (!fp){
     printf("Nao foi possivel abrir o arquivo.\n");
@@ -321,7 +321,7 @@ void pullStudents(aluno* a){
 
 void pullSubject(disciplina* d){
   char nome[50], codigo[6], professor[100], creditos[5];
-  FILE* fp = fopen("../disciplinas.csv", "r");
+  FILE* fp = fopen("./disciplinas.csv", "r");
 
   if (!fp){
     printf("Nao foi possivel abrir o arquivo.\n");
@@ -370,7 +370,7 @@ void pullSubject(disciplina* d){
 
 void pullTerm(periodo* p){
   char per[9], codAl[7], codDis[6];  
-  FILE* fp = fopen("../periodos.csv", "r");
+  FILE* fp = fopen("./periodos.csv", "r");
 
   if (!fp){
     printf("Nao foi possivel abrir o arquivo.\n");
@@ -513,7 +513,7 @@ void consultaDis(aluno* la, periodo* lp, disciplina* ld){
 }
 
 void pushStudents(aluno* la){
-  FILE* fp = fopen("../students.csv", "w+");
+  FILE* fp = fopen("./students.csv", "w+");
   if (!fp) {
     printf("Nao foi possivel abrir o arquivo.\n");
     return;
@@ -525,7 +525,7 @@ void pushStudents(aluno* la){
 }
 
 void pushSubject(disciplina* ld){
-  FILE* fp = fopen("../disciplinas.csv", "w+");
+  FILE* fp = fopen("./disciplinas.csv", "w+");
   if (!fp) {
     printf("Nao foi possivel abrir o arquivo.\n");
     return;
@@ -537,7 +537,7 @@ void pushSubject(disciplina* ld){
 }
 
 void pushTerm(periodo* lp){
-  FILE* fp = fopen("../periodos.csv", "w+");
+  FILE* fp = fopen("./periodos.csv", "w+");
   if (!fp) {
     printf("Nao foi possivel abrir o arquivo.\n");
     return;
