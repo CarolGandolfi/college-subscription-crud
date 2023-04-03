@@ -59,7 +59,7 @@ void inserePeriodo (char codAl[7], char codDis[6], char per[9], periodo *p){
 
 aluno* buscaAl (char str[100], aluno *le){
   if (le == NULL)  return NULL;
-  if (strcmp(le->nome, str)==0 || strcmp(le->codigo, str)==0)  return le;
+  if (strcmp(le->nome, str)==0 || strcmp(le->codigo, str)==0 || strcmp(le->cpf, str)==0)  return le;
   return buscaAl (str, (aluno *)le->prox);
 }
 
@@ -78,13 +78,13 @@ periodo* buscaPer (char str[10], periodo* le){
 void imprimeA (aluno *le) {
    aluno *p;
    for (p = (aluno *)le->prox; p != NULL; p = (aluno *)p->prox)
-      printf ("Nome: %s\tCodigo: %s\n", p->nome, p->codigo);
+      printf ("Nome: %s\tCodigo: %s\tCPF: %s\n", p->nome, p->codigo, p->cpf);
 }
 
 void imprimeD (disciplina *le) {
    disciplina *p;
    for (p = (disciplina *)le->prox; p != NULL; p = (disciplina *)p->prox)
-      printf ("Disciplina: %s\tCodigo: %s\tProfessor: %s\t Creditos: %s\n", p->nome, p->codigo, p->professor, p->creditos);
+      printf ("Disciplina: %s\tCodigo: %s\tProfessor: %s\tCreditos: %s\n", p->nome, p->codigo, p->professor, p->creditos);
 }
 
 void imprimeP (periodo *le) {
@@ -102,7 +102,6 @@ void removePer(periodo* head_ref, char str[10]){
       } else {
         prev->prox = temp->prox;
       }
-      printf("Periodo %s com codAl %s e codDis %s apagado\n", temp->periodo, temp->codAl, temp->codDis);
       free(temp);
       removePer(head_ref, str);
       temp = head_ref;
@@ -116,7 +115,7 @@ void removePer(periodo* head_ref, char str[10]){
 
 void removeAluno(aluno* head_ref, char str[100], periodo* lp) {
   aluno* temp = head_ref, *prev;
-   if (temp != NULL && (strcmp(temp->codigo, str)==0 || strcmp(temp->nome, str)==0)) {
+   if (temp != NULL && (strcmp(temp->codigo, str)==0 || strcmp(temp->nome, str)==0 || strcmp(temp->cpf, str)==0)) {
       head_ref = (aluno *)temp->prox;
       removePer(lp, temp->codigo);
       free(temp);
@@ -124,7 +123,7 @@ void removeAluno(aluno* head_ref, char str[100], periodo* lp) {
       return;
    }
 
-   while (temp != NULL && (strcmp(temp->codigo, str)!=0 && strcmp(temp->nome, str)!=0)) {
+   while (temp != NULL && (strcmp(temp->codigo, str)!=0 && strcmp(temp->nome, str)!=0 && strcmp(temp->cpf, str)!=0)) {
       prev = temp;
       temp = (aluno *)temp->prox;
    }
@@ -173,7 +172,7 @@ void cadastroAluno(aluno* a){
     nome[i] = tolower(nome[i]);
   }
 
-  printf("Digite o codigo do aluno: ");
+  printf("Digite o codigo do aluno (formato XXXXX): ");
   fgets(codigo,sizeof(codigo),stdin);
   codigo[strcspn(codigo, "\n")] = '\0';
 
@@ -181,9 +180,12 @@ void cadastroAluno(aluno* a){
   fgets(cpf,sizeof(cpf),stdin);
   cpf[strcspn(cpf, "\n")] = '\0'; // substitui \n por \0
 
-  insereAluno(codigo, cpf, nome, a);
- 
-  printf("\nNovo aluno adicionado ao sistema.\n");
+  if(buscaAl(codigo, a)==NULL && buscaAl(cpf, a)==NULL){  
+    insereAluno(codigo, cpf, nome, a);
+    printf("\nNovo aluno adicionado ao sistema.\n");
+  }else{
+    printf("Aluno com informacoes ja existentes\n");
+  }
 
   return;
 }
@@ -197,22 +199,27 @@ void cadastroDisciplina(disciplina* ld){
     nome[i] = tolower(nome[i]);
   }
 
-  printf("Digite o codigo da disciplina: ");
+  printf("Digite o codigo da disciplina (formato XXXX): ");
   fgets(codigo,sizeof(codigo),stdin);
   codigo[strcspn(codigo, "\n")] = '\0';
 
   printf("Digite o nome do professor: ");
   fgets(professor,sizeof(professor),stdin);
   professor[strcspn(professor, "\n")] = '\0'; // substitui \n por \0
+  for(unsigned int i=0; i<strlen(professor); i++){
+    professor[i] = tolower(professor[i]);
+  }
 
   printf("Digite o numero de creditos da disciplina: ");
   fgets(creditos,sizeof(creditos),stdin);
   creditos[strcspn(creditos, "\n")] = '\0';
 
-  insereDisciplina(codigo, nome, professor, creditos, ld);
-
-  printf("\nNova disciplina adicionada ao sistema.\n");
-
+  if(buscaDis(codigo, ld)==NULL){  
+    insereDisciplina(codigo, nome, professor, creditos, ld);
+    printf("\nNova disciplina adicionada ao sistema.\n");
+  }else{
+    printf("Disciplina com codigo ja existente\n");
+  }
   return;
 }
 
@@ -237,7 +244,7 @@ void matricula(disciplina* ld, aluno* la, periodo* lp){
     }
     dis = buscaDis(str, ld);
     if(dis == NULL){
-      printf("Opção invalida. Tente novamente.\n");
+      printf("Opcao invalida. Tente novamente.\n");
     }else{
       break;
     }
@@ -252,7 +259,7 @@ void matricula(disciplina* ld, aluno* la, periodo* lp){
     }
     al = buscaAl(str, la);
     if(al == NULL){
-      printf("Opção invalida. Tente novamente.\n");
+      printf("Opcao invalida. Tente novamente.\n");
     }else{
       break;
     }
@@ -264,7 +271,7 @@ void matricula(disciplina* ld, aluno* la, periodo* lp){
     str[i] = tolower(str[i]);
   }
   inserePeriodo(al->codigo, dis->codigo, str, lp);
-  printf("\nAluno %s matriculado na disciplina %s no periodo %s.\n", al->nome, dis->nome, str);
+  printf("\nAluno(a) %s matriculado(a) na disciplina %s no periodo %s.\n", al->nome, dis->nome, str);
   return;
 }
 
@@ -273,7 +280,7 @@ void pullStudents(aluno* a){
   FILE* fp = fopen("../students.csv", "r");
 
   if (!fp){
-    printf("Can't open file\n");
+    printf("Nao foi possivel abrir o arquivo.\n");
   }else{
     char buffer[1024];
     int row = 0;
@@ -317,7 +324,7 @@ void pullSubject(disciplina* d){
   FILE* fp = fopen("../disciplinas.csv", "r");
 
   if (!fp){
-    printf("Can't open file\n");
+    printf("Nao foi possivel abrir o arquivo.\n");
   }else{
     char buffer[1024];
     int row = 0;
@@ -366,7 +373,7 @@ void pullTerm(periodo* p){
   FILE* fp = fopen("../periodos.csv", "r");
 
   if (!fp){
-    printf("Can't open file\n");
+    printf("Nao foi possivel abrir o arquivo.\n");
   }else{
     char buffer[1024];
     int row = 0;
@@ -420,13 +427,16 @@ void consultaAl(aluno* la, periodo* lp, disciplina* ld) {
   char str[100];
   fgets(str,sizeof(str),stdin);
   str[strcspn(str, "\n")] = '\0'; 
+  for(unsigned int i=0; i<strlen(str); i++){
+    str[i] = tolower(str[i]);
+  }
   al = buscaAl(str, la);
   if(al ==  NULL){
-    printf("Aluno não cadastrado.\n");
+    printf("Aluno nao cadastrado.\n");
     return;
   }
   char term[9];
-  printf("Qual periodo?\n");
+  printf("Qual periodo? (formato AAAA.S)\n");
   fgets(term,sizeof(term),stdin);
   term[strcspn(term, "\n")] = '\0'; 
 
@@ -438,8 +448,7 @@ void consultaAl(aluno* la, periodo* lp, disciplina* ld) {
         if(strcmp(per->periodo,term)==0){
           cont++;
           printf("%s\n", d->nome);
-        }
-        else{
+        }else{
           cont++;
           printf("Nao ha disciplinas cadastradas para o aluno no periodo especificado.\n");
         }
@@ -447,8 +456,8 @@ void consultaAl(aluno* la, periodo* lp, disciplina* ld) {
       per = (periodo *)per->prox;
     }
     if(cont==0){
-    printf("Nenhum aluno matriculado nessa disciplina\n");
-  }
+      printf("Nenhum aluno matriculado nessa disciplina\n");
+    }
   }
 
   return;
@@ -464,18 +473,21 @@ void consultaDis(aluno* la, periodo* lp, disciplina* ld){
     printf("Nenhuma disciplina cadastrada\n");
     return;
   }
-  printf("Qual disciplina será consultada?\n");
+  printf("Qual disciplina sera consultada?\n");
   imprimeD(ld);
   char str[100];
   fgets(str,sizeof(str),stdin);
-  str[strcspn(str, "\n")] = '\0'; 
+  str[strcspn(str, "\n")] = '\0';
+  for(unsigned int i=0; i<strlen(str); i++){
+    str[i] = tolower(str[i]);
+  } 
   d = buscaDis(str, ld); 
   if(d ==  NULL){
-    printf("Disciplina não cadastrada.\n");
+    printf("Disciplina nao cadastrada.\n");
     return;
   }
   char term[9];
-  printf("Qual periodo?\n");
+  printf("Qual periodo? (formato AAAA.S)\n");
   fgets(term,sizeof(term),stdin);
   term[strcspn(term, "\n")] = '\0'; 
   while(per != NULL){
@@ -486,8 +498,7 @@ void consultaDis(aluno* la, periodo* lp, disciplina* ld){
         if(strcmp(per->periodo,term)==0){
           cont++;
           printf("%s\n", al->nome);
-        }
-        else{
+        }else{
           cont++;
           printf("Nao ha disciplinas cadastradas para o aluno no periodo especificado.\n");
         }
@@ -504,7 +515,7 @@ void consultaDis(aluno* la, periodo* lp, disciplina* ld){
 void pushStudents(aluno* la){
   FILE* fp = fopen("../students.csv", "w+");
   if (!fp) {
-    printf("Can't open file\n");
+    printf("Nao foi possivel abrir o arquivo.\n");
     return;
   }
   aluno *p;
@@ -516,7 +527,7 @@ void pushStudents(aluno* la){
 void pushSubject(disciplina* ld){
   FILE* fp = fopen("../disciplinas.csv", "w+");
   if (!fp) {
-    printf("Can't open file\n");
+    printf("Nao foi possivel abrir o arquivo.\n");
     return;
   }
   disciplina *p;
@@ -528,7 +539,7 @@ void pushSubject(disciplina* ld){
 void pushTerm(periodo* lp){
   FILE* fp = fopen("../periodos.csv", "w+");
   if (!fp) {
-    printf("Can't open file\n");
+    printf("Nao foi possivel abrir o arquivo.\n");
     return;
   }
   periodo *p;
@@ -711,19 +722,22 @@ int main(){
       break;
       case 9:
         printf("Excluir um periodo do sistema.\n");
-        printf("Qual periodo deseja excluir?\n");
-        imprimeP(listaPer);
-        fgets(str,sizeof(str),stdin);
-        str[strcspn(str, "\n")] = '\0';
-        for(unsigned int i=0; i<strlen(str); i++){
-          str[i] = tolower(str[i]);
-        }
-        removePer(listaPer, str);
-        if(buscaPer(str,listaPer)!=NULL){
-          printf("Periodo removido.\n");
-        }
-        else{
-          printf("Nao ha alunos nem disciplinas cadastrados nesse periodo!");
+        if(listaPer->prox == NULL){
+          printf("Nenhum periodo com matriculas cadastradas\n");
+        } else {
+          printf("Qual periodo deseja excluir?\n");
+          imprimeP(listaPer);
+          fgets(str,sizeof(str),stdin);
+          str[strcspn(str, "\n")] = '\0';
+          for(unsigned int i=0; i<strlen(str); i++){
+            str[i] = tolower(str[i]);
+          }
+          if(buscaPer(str,listaPer)!=NULL){
+            removePer(listaPer, str);
+            printf("Periodo removido.\n");
+          }else{
+            printf("Nao ha alunos nem disciplinas cadastrados nesse periodo!");
+          }
         }
         printf("\n1. Cadastro do Aluno \n2. Cadastro da Disciplina\n3. Matricular aluno em disciplina\n4. Consulta por Aluno\n5. Consulta por Disciplina\n6. Exibir listas\n7. Excluir aluno do sistema\n8. Excluir disciplina do sistema\n9. Excluir um periodo do sistema\n0. Salvar e encerrar.\n");
       break;
